@@ -1,12 +1,11 @@
 'strict';
 
-const { audio, textSprite } = require('ebabel');
+const { textSprite } = require('ebabel');
 
 const spawnSprite = (input) => {
   const {
     spriteData,
     particleTexture,
-    camera
   } = input;
 
   const spriteMaterial = new THREE.SpriteMaterial({ map: particleTexture, color: 0xffffff });
@@ -26,37 +25,6 @@ const spawnSprite = (input) => {
     text: spriteData.name,
   });
   sprite.add(text);
-
-  // Death sound effect.
-  let url;
-  switch (sprite.name) {
-    case 'a wisp':
-      url = 'assets/sound-effects/spells/magicdrop.ogg';
-      break;
-    case 'an evil wisp':
-      url = 'assets/sound-effects/spells/zap.ogg';
-      break;
-    case 'a blessed wisp':
-      url = 'assets/sound-effects/spells/heal.ogg';
-      break;
-    default:
-      // Players.
-      url = 'assets/sound-effects/spells/disenchant.ogg';
-  }
-  const sound = audio({
-    THREE,
-    camera,
-    volume: EG.dataStore.defaultVolume,
-    name: 'death',
-    url,
-    distance: 20,
-  });
-  sprite.add(sound);
-
-  // todo: Hit missing sound effect.
-  // todo: Hit landing sound effect.
-  // todo: A very large hit landing sound effect.
-  // todo: Player dying sound effect.
 
   return sprite;
 };

@@ -1,7 +1,7 @@
 'strict';
 
 const spawnSprite = require('./spawn-sprite');
-const addMessageToLogs = require('./add-message-to-logs');
+const playSoundEffect = require('./play-sound-effect');
 
 // Particles setup.
 const particleTexture = new THREE.TextureLoader().load('assets/spark.png');
@@ -13,17 +13,17 @@ const addNpc = (sprite) => {
   EG.scene.add(particleGroup);
 };
 
-const init = (camera) => {
+const init = () => {
   // Spawn multiple npc.
   socket.on('spawnMultipleNpc', (multipleNpc) => {
     multipleNpc.map((npc) => {
-      addNpc(spawnSprite({ spriteData: npc, particleTexture, camera }));
+      addNpc(spawnSprite({ spriteData: npc, particleTexture }));
     });
   });
 
   // Spawn single npc.
   socket.on('spawnSprite', (npc) => {
-    addNpc(spawnSprite({ spriteData: npc, particleTexture, camera }));
+    addNpc(spawnSprite({ spriteData: npc, particleTexture }));
   });
 
   // Update npc states.
@@ -34,13 +34,13 @@ const init = (camera) => {
   // Spawn current player.
   socket.on('spawnPlayer', (player) => {
     EG.dataStore.player = player;
-    EG.scene.add(spawnSprite({ spriteData: player, particleTexture, camera }));
+    EG.scene.add(spawnSprite({ spriteData: player, particleTexture }));
   });
 
   //  Spawn other player state that spawns after the current player.
   socket.on('addOtherPlayer', (otherPlayerState) => {
     EG.dataStore.otherPlayerStates[otherPlayerState.name] = otherPlayerState;
-    EG.scene.add(spawnSprite({ spriteData: otherPlayerState, particleTexture, camera }));
+    EG.scene.add(spawnSprite({ spriteData: otherPlayerState, particleTexture }));
   });
 
   // Update position of a player other than current one.
@@ -75,25 +75,22 @@ const init = (camera) => {
     }
   });
 
+  socket.on('action', (action) => {
+    // Play all sound effects when the Player is the agent.
+    if (action.agentType === 'Player') {
+      playSoundEffect(action.agentName, action.name);
+    }
+
+    // Only a blessed wisp can heal, but the player is the target.
+    if (action.targetType === 'Player' && action.name === 'heals') {
+      playSoundEffect(action.targetName, action.name);
+    }
+
+    // Note: not all possible sound effects are played, in particular the npc sound effects, because their name is not unique and there would be too many sound effects competing to play at the same time.
+  });
+
   socket.on('playerDied', (name) => {
-    addMessageToLogs(`${name} has died.`);
-
-    let player;
-    if (EG.dataStore.player.name === name) {
-      player = EG.scene.children.filter(c => c.name === name);
-    }
-
-    if (!player || player.length !== 1) {
-      return;
-    }
-
-    const deathAudio = player[0].children.filter(c => c.type === 'Audio' && c.name === 'death');
-
-    if (!deathAudio || deathAudio.length !== 1) {
-      return;
-    }
-
-    deathAudio[0].play();
+    playSoundEffect(name, 'death');
   });
 
   socket.on('removePlayer', (name) => {
@@ -140,7 +137,7 @@ const init = (camera) => {
     Object.keys(players).map((_name) => {
       if (_name !== name) {
         EG.dataStore.otherPlayerStates[_name] = players[_name];
-        EG.scene.add(spawnSprite({ spriteData: players[_name], particleTexture, camera }));
+        EG.scene.add(spawnSprite({ spriteData: players[_name], particleTexture }));
       }
     });
   });

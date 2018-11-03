@@ -65,11 +65,6 @@ const render = (
         return;
       }
 
-      // Npc just died, play its death sound.
-      if (child.userData.life > 0 && newState.life <= 0) {
-        child.children.filter((c) => c.name === 'death')[0].play();
-      }
-
       // Update state from EG.dataStore.npcStates when there is one.
       child.userData.position =  newState.position;
       child.userData.life = newState.life;
